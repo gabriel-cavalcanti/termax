@@ -1,0 +1,27 @@
+# Segredos e Variáveis de Ambiente (INEGOCIÁVEL)
+.env
+*.env
+*.env.local
+**/secrets.h
+**/wifi_credentials.h
+
+# Backend (Java / Spring Boot / Maven / Gradle)
+target/
+build/
+.gradle/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.log
+
+# IDEs e Editores
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+
+# Frontend / Node
+node_modules/
+dist/
