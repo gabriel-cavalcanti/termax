@@ -3,23 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TERMAX — Validação de Ambiente (Semana 1)</title>
+  <title>TERMAX // Telemetria Ambiental IoT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --success-bg: rgba(16, 185, 129, 0.15);
-      --success-border: #10b981;
-      --success-text: #34d399;
-      --error-bg: rgba(239, 68, 68, 0.15);
-      --error-border: #ef4444;
-      --error-text: #f87171;
-      --accent: #38bdf8;
-      --accent-hover: #0284c7;
+      --bg-main: #09090b;
+      --bg-panel: #121316;
+      --bg-subtle: #18191e;
+      --border: #26272b;
+      --border-control: #27272a;
+      --border-hover: #3f3f46;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --status-up: #10b981;
+      --status-warn: #f59e0b;
+      --status-down: #ef4444;
+      --temp-esp32: #f97316;
+      --temp-esp8266: #10b981;
+      --hum-esp32: #38bdf8;
+      --hum-esp8266: #a855f7;
+      --soma-navy: #0d2542;
+      --soma-navy-light: #163a63;
+      --soma-steel: #46769b;
+      --soma-accent: #5da9dd;
+      --soma-slate: #646e78;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
     }
 
     * {
@@ -29,254 +42,1166 @@
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      padding: 2rem 1rem;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      line-height: 1.45;
+      padding: 0.75rem 1rem;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      -webkit-font-smoothing: antialiased;
     }
 
-    header {
-      background: var(--card);
+    .mono {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .workspace {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Compliance / Disclaimer Bar */
+    .compliance-bar {
+      background-color: var(--bg-panel);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
+      border-radius: 6px;
+      padding: 0.55rem 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.76rem;
+      color: var(--text-secondary);
     }
 
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-      color: var(--text);
+    .compliance-tag {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #e2e8f0;
+      background-color: var(--soma-navy);
+      border: 1px solid var(--soma-steel);
+      border-radius: 4px;
+      padding: 0.16rem 0.5rem;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .disclaimer {
-      font-size: 0.875rem;
-      color: var(--muted);
-      border-left: 3px solid var(--accent);
-      padding-left: 0.75rem;
+    .compliance-text {
+      flex: 1;
+      color: var(--text-secondary);
     }
 
-    .status-bar {
+    /* Top Technical Toolbar */
+    .toolbar {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--soma-steel);
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 1rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
+      gap: 0.75rem;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    .soma-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .soma-word-strong {
+      font-family: var(--font-sans);
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #f8fafc;
+    }
+
+    .soma-plus-svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .soma-word-lab {
+      font-family: var(--font-sans);
+      font-size: 0.96rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: baseline;
+      gap: 0.55rem;
+    }
+
+    .brand-block h1 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .brand-rev {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .divider-v {
+      width: 1px;
+      height: 18px;
+      background-color: var(--border);
     }
 
     .badge {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 9999px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      background: rgba(148, 163, 184, 0.1);
-      color: var(--muted);
+      gap: 0.45rem;
+      padding: 0.28rem 0.65rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid var(--border-control);
+      background-color: var(--bg-subtle);
+      color: var(--text-secondary);
+      white-space: nowrap;
     }
 
     .badge.online {
-      background: var(--success-bg);
-      border-color: var(--success-border);
-      color: var(--success-text);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      background-color: rgba(16, 185, 129, 0.08);
+    }
+
+    .badge.degraded {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      background-color: rgba(245, 158, 11, 0.08);
     }
 
     .badge.offline {
-      background: var(--error-bg);
-      border-color: var(--error-border);
-      color: var(--error-text);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      background-color: rgba(239, 68, 68, 0.08);
     }
 
     .dot {
-      width: 10px;
-      height: 10px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background-color: currentColor;
+      flex-shrink: 0;
     }
 
-    button {
-      background-color: var(--accent);
-      color: #0f172a;
-      border: none;
-      border-radius: 8px;
-      padding: 0.6rem 1.2rem;
-      font-size: 0.9rem;
-      font-weight: 600;
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    select.device-select,
+    button.tech-btn {
+      font-family: var(--font-sans);
+      background-color: var(--bg-subtle);
+      color: var(--text-primary);
+      border: 1px solid var(--border-control);
+      border-radius: 4px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
       cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      outline: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+      white-space: nowrap;
     }
 
-    button:hover {
-      background-color: var(--accent-hover);
-      color: #ffffff;
+    select.device-select {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.75rem;
     }
 
-    button:active {
-      transform: scale(0.98);
+    select.device-select:hover,
+    button.tech-btn:hover:not(:disabled) {
+      border-color: var(--border-hover);
+      background-color: #202127;
     }
 
-    button:disabled {
-      opacity: 0.6;
+    button.tech-btn:disabled {
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    .chart-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
+    button.btn-clear {
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.3);
     }
 
-    .chart-wrapper {
+    button.btn-clear:hover:not(:disabled) {
+      background-color: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.55);
+    }
+
+    button.btn-live.active {
+      border-color: rgba(16, 185, 129, 0.45);
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+    }
+
+    .live-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+    }
+
+    button.btn-live.active .live-indicator {
+      background-color: #34d399;
+      box-shadow: 0 0 6px rgba(52, 211, 153, 0.8);
+    }
+
+    button.btn-refresh {
+      background-color: var(--soma-navy);
+      color: #f8fafc;
+      border-color: var(--soma-steel);
+      font-weight: 600;
+    }
+
+    button.btn-refresh:hover:not(:disabled) {
+      background-color: var(--soma-navy-light);
+      border-color: var(--soma-accent);
+      color: #ffffff;
+    }
+
+    /* 4 KPI Cards Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.875rem;
+    }
+
+    @media (max-width: 1100px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-card {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.65rem;
+      min-width: 0;
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      white-space: nowrap;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .kpi-unit-tag {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .kpi-primary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      white-space: nowrap;
+      gap: 0.5rem;
+    }
+
+    .kpi-main-value {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 1.55rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .kpi-sub-delta {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .kpi-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      padding-top: 0.45rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .kpi-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      white-space: nowrap;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+    }
+
+    .kpi-row-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .kpi-row-val {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .kpi-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      white-space: nowrap;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .series-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* Dual Chart Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    @media (max-width: 980px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-panel {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.9rem 1.05rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      min-width: 0;
+    }
+
+    .chart-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.55rem;
+    }
+
+    .chart-panel-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .chart-panel-range {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .chart-canvas-wrap {
       position: relative;
-      height: 380px;
+      flex: 1;
+      min-height: 350px;
+      height: 350px;
       width: 100%;
+    }
+
+    /* Technical Footer SOMA + LAB */
+    .tech-footer {
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .tech-footer-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-secondary);
+    }
+
+    .tech-footer-accent {
+      color: var(--soma-accent);
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>TERMAX — Validação de Ambiente (Semana 1)</h1>
-      <p class="disclaimer">
+  <div class="workspace">
+    <!-- Barra Técnica de Conformidade (Aviso Obrigatório) -->
+    <header class="compliance-bar">
+      <span class="compliance-tag">AVISO TÉCNICO</span>
+      <p class="compliance-text">
         <strong>Aviso:</strong> o TERMAX é um protótipo educacional. Não é dispositivo médico, não diagnostica, não controla o ambiente e não está validado para garantir a conservação de medicamentos, amostras ou qualquer material. Limites e alertas são demonstrativos. Sem dados de pessoas.
       </p>
     </header>
 
-    <section class="status-bar">
-      <div id="statusBadge" class="badge">
-        <span class="dot"></span>
-        <span id="statusText">Verificando conexão com a API...</span>
+    <!-- Barra de Ferramentas e Status -->
+    <section class="toolbar">
+      <div class="toolbar-left">
+        <div class="soma-brand" title="SOMA + LAB">
+          <span class="soma-word-strong">SOMA</span>
+          <svg class="soma-plus-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <defs>
+              <linearGradient id="somaCrossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#5da9dd" />
+                <stop offset="100%" stop-color="#2b587a" />
+              </linearGradient>
+            </defs>
+            <path
+              fill="url(#somaCrossGrad)"
+              d="M9.5 3h5A1.5 1.5 0 0 1 16 4.5V8h3.5A1.5 1.5 0 0 1 21 9.5v5a1.5 1.5 0 0 1-1.5 1.5H16v3.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 8 19.5V16H4.5A1.5 1.5 0 0 1 3 14.5v-5A1.5 1.5 0 0 1 4.5 8H8V4.5A1.5 1.5 0 0 1 9.5 3Z"
+            />
+          </svg>
+          <span class="soma-word-lab">LAB</span>
+        </div>
+        <div class="divider-v"></div>
+        <div class="brand-block">
+          <h1>TERMAX // TELEMETRIA</h1>
+          <span class="brand-rev">REV 1.0 • SEMANA 1</span>
+        </div>
+        <div class="divider-v"></div>
+        <div id="statusBadge" class="badge">
+          <span class="dot"></span>
+          <span id="statusText">VERIFICANDO API...</span>
+        </div>
       </div>
-      <button id="refreshBtn" type="button">Atualizar</button>
+
+      <div class="toolbar-actions">
+        <select id="deviceFilter" class="device-select" aria-label="Selecionar visualização de dispositivo">
+          <option value="all">Comparar Todos</option>
+          <option value="esp32-dht22">Apenas esp32-dht22</option>
+          <option value="esp8266-aht20">Apenas esp8266-aht20</option>
+        </select>
+        <button id="clearMockBtn" class="tech-btn btn-clear" type="button" title="Zerar dados mockados em memória">
+          Limpar Mock
+        </button>
+        <button id="liveBtn" class="tech-btn btn-live" type="button">
+          <span class="live-indicator"></span>
+          <span id="liveBtnText" class="mono">Ao Vivo (5s)</span>
+        </button>
+        <button id="refreshBtn" class="tech-btn btn-refresh" type="button">
+          Atualizar
+        </button>
+      </div>
     </section>
 
-    <section class="chart-card">
-      <div class="chart-wrapper">
-        <canvas id="termaxChart"></canvas>
-      </div>
+    <!-- 4 KPI Cards Técnicos -->
+    <section class="kpi-grid">
+      <!-- Card 1: Temperatura -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>TEMPERATURA</span>
+          <span class="kpi-unit-tag">ESCALA °C</span>
+        </div>
+        <div class="kpi-primary-row">
+          <span id="kpiTempMain" class="kpi-main-value">-- °C</span>
+          <span id="kpiTempDelta" class="kpi-sub-delta">0,0 °C</span>
+        </div>
+        <div id="kpiTempRows" class="kpi-table">
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:var(--temp-esp32)"></span>esp32-dht22</span>
+            <span class="kpi-row-val">-- °C</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:var(--temp-esp8266)"></span>esp8266-aht20</span>
+            <span class="kpi-row-val">-- °C</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: Umidade Relativa -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>UMIDADE RELATIVA</span>
+          <span class="kpi-unit-tag">ESCALA %RH</span>
+        </div>
+        <div class="kpi-primary-row">
+          <span id="kpiHumMain" class="kpi-main-value">-- %RH</span>
+          <span id="kpiHumDelta" class="kpi-sub-delta">0,0 %RH</span>
+        </div>
+        <div id="kpiHumRows" class="kpi-table">
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:var(--hum-esp32)"></span>esp32-dht22</span>
+            <span class="kpi-row-val">-- %RH</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:var(--hum-esp8266)"></span>esp8266-aht20</span>
+            <span class="kpi-row-val">-- %RH</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3: Nós de Telemetria -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>NÓS DE TELEMETRIA</span>
+          <span id="kpiNodesCount" class="kpi-unit-tag">0 ATIVOS</span>
+        </div>
+        <div id="kpiNodesList" class="kpi-table" style="border-top:none; padding-top:0;">
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:#52525b"></span>esp32-dht22</span>
+            <span class="kpi-row-val">0 pkts</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:#52525b"></span>esp8266-aht20</span>
+            <span class="kpi-row-val">0 pkts</span>
+          </div>
+        </div>
+        <div class="kpi-footer">
+          <span>JANELA DE BUFFER</span>
+          <span id="kpiBufferUsage" class="mono">0 / 15 AMOSTRAS</span>
+        </div>
+      </article>
+
+      <!-- Card 4: Divergência entre Sensores -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>DIVERGÊNCIA ENTRE SENSORES</span>
+          <span id="kpiDivMode" class="kpi-unit-tag">ABS DELTA</span>
+        </div>
+        <div class="kpi-table" style="border-top:none; padding-top:0;">
+          <div class="kpi-row">
+            <span class="kpi-row-label">Δ Temperatura</span>
+            <span id="kpiDeltaTemp" class="kpi-row-val">-- °C</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-row-label">Δ Umidade Rel.</span>
+            <span id="kpiDeltaHum" class="kpi-row-val">-- %RH</span>
+          </div>
+        </div>
+        <div class="kpi-footer">
+          <span>ÚLTIMA LEITURA</span>
+          <span id="kpiLastSync" class="mono">--:--:--</span>
+        </div>
+      </article>
     </section>
+
+    <!-- Grid de 2 Gráficos Independentes com Escalas Fixas -->
+    <section class="charts-grid">
+      <!-- Painel Esquerdo: Temperatura (°C) -->
+      <article class="chart-panel">
+        <div class="chart-panel-header">
+          <span class="chart-panel-title">SÉRIE TEMPORAL // TEMPERATURA (°C)</span>
+          <span class="chart-panel-range">ESCALA FIXA: 15 °C — 45 °C (PASSO 5 °C)</span>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </article>
+
+      <!-- Painel Direito: Umidade Relativa (%RH) -->
+      <article class="chart-panel">
+        <div class="chart-panel-header">
+          <span class="chart-panel-title">SÉRIE TEMPORAL // UMIDADE RELATIVA (%RH)</span>
+          <span class="chart-panel-range">ESCALA FIXA: 0 % – 100 % (PASSO 10 %)</span>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="humChart"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <!-- Rodapé Técnico Institucional SOMA + LAB -->
+    <footer class="tech-footer">
+      <div class="tech-footer-left">
+        <span class="tech-footer-accent">SOMA + LAB</span>
+        <span>// ENGENHARIA DE SOFTWARE, ELETRÔNICA &amp; PESQUISA</span>
+      </div>
+      <div>PROJETO TERMAX • TELEMETRIA AMBIENTAL IoT (SEMANA 1)</div>
+    </footer>
   </div>
 
   <script>
     const API_URL = "http://localhost:8080/api/v1/teste";
+    const READINGS_URL = "http://localhost:8080/api/v1/readings";
+
     const statusBadge = document.getElementById("statusBadge");
     const statusText = document.getElementById("statusText");
+    const deviceFilter = document.getElementById("deviceFilter");
+    const clearMockBtn = document.getElementById("clearMockBtn");
     const refreshBtn = document.getElementById("refreshBtn");
-    const ctx = document.getElementById("termaxChart").getContext("2d");
+    const liveBtn = document.getElementById("liveBtn");
 
-    let chartInstance = null;
+    const kpiTempMain = document.getElementById("kpiTempMain");
+    const kpiTempDelta = document.getElementById("kpiTempDelta");
+    const kpiTempRows = document.getElementById("kpiTempRows");
 
-    function renderChart(labels, temperature, humidity) {
-      if (chartInstance) {
-        chartInstance.data.labels = labels;
-        chartInstance.data.datasets[0].data = temperature;
-        chartInstance.data.datasets[1].data = humidity;
-        chartInstance.update();
-        return;
+    const kpiHumMain = document.getElementById("kpiHumMain");
+    const kpiHumDelta = document.getElementById("kpiHumDelta");
+    const kpiHumRows = document.getElementById("kpiHumRows");
+
+    const kpiNodesCount = document.getElementById("kpiNodesCount");
+    const kpiNodesList = document.getElementById("kpiNodesList");
+    const kpiBufferUsage = document.getElementById("kpiBufferUsage");
+
+    const kpiDeltaTemp = document.getElementById("kpiDeltaTemp");
+    const kpiDeltaHum = document.getElementById("kpiDeltaHum");
+    const kpiLastSync = document.getElementById("kpiLastSync");
+
+    const tempCtx = document.getElementById("tempChart").getContext("2d");
+    const humCtx = document.getElementById("humChart").getContext("2d");
+
+    let tempChartInstance = null;
+    let humChartInstance = null;
+    let liveIntervalId = null;
+    let lastTelemetryData = null;
+
+    const EXTRA_PALETTES = [
+      { temp: "#eab308", hum: "#06b6d4", dash: [4, 3] },
+      { temp: "#f43f5e", hum: "#6366f1", dash: [6, 3] }
+    ];
+
+    function obterEstiloDispositivo(deviceId, index = 0) {
+      if (deviceId === "esp32-dht22") {
+        return {
+          tempColor: "#f97316",
+          humColor: "#38bdf8",
+          borderDash: []
+        };
+      }
+      if (deviceId === "esp8266-aht20") {
+        return {
+          tempColor: "#10b981",
+          humColor: "#a855f7",
+          borderDash: [6, 4]
+        };
+      }
+      const pal = EXTRA_PALETTES[index % EXTRA_PALETTES.length];
+      return {
+        tempColor: pal.temp,
+        humColor: pal.hum,
+        borderDash: pal.dash
+      };
+    }
+
+    function formatarNumero(valor, casas = 1) {
+      if (typeof valor !== "number" || Number.isNaN(valor)) return "--";
+      return valor.toFixed(casas).replace(".", ",");
+    }
+
+    function calcularVariacaoCurta(lista, unidade) {
+      if (!Array.isArray(lista) || lista.length < 2) {
+        return `0,0 ${unidade}`;
+      }
+      const atual = lista[lista.length - 1];
+      const anterior = lista[lista.length - 2];
+      const diff = atual - anterior;
+      const sinal = diff > 0 ? "+" : "";
+      return `${sinal}${diff.toFixed(1).replace(".", ",")} ${unidade}`;
+    }
+
+    function sincronizarOpcoesSelect(devicesMap) {
+      const conhecidos = new Set(["all", "esp32-dht22", "esp8266-aht20"]);
+      for (const option of Array.from(deviceFilter.options)) {
+        conhecidos.add(option.value);
+      }
+      Object.keys(devicesMap || {}).forEach((devId) => {
+        if (!conhecidos.has(devId)) {
+          const opt = document.createElement("option");
+          opt.value = devId;
+          opt.textContent = `Apenas ${devId}`;
+          deviceFilter.appendChild(opt);
+          conhecidos.add(devId);
+        }
+      });
+    }
+
+    function obterMapaDispositivos(data) {
+      if (data && data.devices && typeof data.devices === "object" && Object.keys(data.devices).length > 0) {
+        return data.devices;
+      }
+      if (data && Array.isArray(data.labels) && data.labels.length > 0) {
+        const fallbackId = data.lastDevice || "esp32-dht22";
+        const temps = data.temperature || [];
+        const hums = data.humidity || [];
+        return {
+          [fallbackId]: {
+            deviceId: fallbackId,
+            lastTemperature: temps.length ? temps[temps.length - 1] : null,
+            lastHumidity: hums.length ? hums[hums.length - 1] : null,
+            lastUpdate: data.lastUpdate || data.labels[data.labels.length - 1],
+            totalReadings: data.labels.length,
+            labels: data.labels,
+            temperature: temps,
+            humidity: hums
+          }
+        };
+      }
+      return {};
+    }
+
+    function atualizarKPIs(data) {
+      const devicesMap = obterMapaDispositivos(data);
+      sincronizarOpcoesSelect(devicesMap);
+
+      const filtro = deviceFilter.value;
+      const ativosIds = Object.keys(devicesMap);
+      const esp32 = devicesMap["esp32-dht22"];
+      const esp8266 = devicesMap["esp8266-aht20"];
+
+      // Dispositivo de referência para o número principal em destaque
+      let primaryDev = null;
+      if (filtro !== "all" && devicesMap[filtro]) {
+        primaryDev = devicesMap[filtro];
+      } else if (data.lastDevice && devicesMap[data.lastDevice]) {
+        primaryDev = devicesMap[data.lastDevice];
+      } else if (esp32) {
+        primaryDev = esp32;
+      } else if (ativosIds.length > 0) {
+        primaryDev = devicesMap[ativosIds[0]];
       }
 
-      chartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "Temperatura (°C)",
-              data: temperature,
-              borderColor: "#f97316",
-              backgroundColor: "rgba(249, 115, 22, 0.15)",
-              borderWidth: 2.5,
-              pointRadius: 4,
-              tension: 0.3,
-              fill: true
-            },
-            {
-              label: "Umidade (%)",
-              data: humidity,
-              borderColor: "#38bdf8",
-              backgroundColor: "rgba(56, 189, 248, 0.15)",
-              borderWidth: 2.5,
-              pointRadius: 4,
-              tension: 0.3,
-              fill: true
-            }
-          ]
+      if (primaryDev && primaryDev.totalReadings > 0) {
+        kpiTempMain.textContent = `${formatarNumero(primaryDev.lastTemperature)} °C`;
+        kpiTempDelta.textContent = calcularVariacaoCurta(primaryDev.temperature, "°C");
+        kpiHumMain.textContent = `${formatarNumero(primaryDev.lastHumidity)} %RH`;
+        kpiHumDelta.textContent = calcularVariacaoCurta(primaryDev.humidity, "%RH");
+      } else {
+        kpiTempMain.textContent = "-- °C";
+        kpiTempDelta.textContent = "-- °C";
+        kpiHumMain.textContent = "-- %RH";
+        kpiHumDelta.textContent = "-- %RH";
+      }
+
+      // Linhas tabulares comparando esp32-dht22 e esp8266-aht20 (e extras se existirem)
+      const listaComparacao = ["esp32-dht22", "esp8266-aht20"];
+      ativosIds.forEach((id) => {
+        if (!listaComparacao.includes(id)) listaComparacao.push(id);
+      });
+
+      kpiTempRows.innerHTML = listaComparacao.slice(0, 3).map((id, idx) => {
+        const dev = devicesMap[id];
+        const estilo = obterEstiloDispositivo(id, idx);
+        const valStr = dev && typeof dev.lastTemperature === "number"
+          ? `${formatarNumero(dev.lastTemperature)} °C`
+          : "-- °C";
+        return `
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:${estilo.tempColor}"></span>${id}</span>
+            <span class="kpi-row-val">${valStr}</span>
+          </div>
+        `;
+      }).join("");
+
+      kpiHumRows.innerHTML = listaComparacao.slice(0, 3).map((id, idx) => {
+        const dev = devicesMap[id];
+        const estilo = obterEstiloDispositivo(id, idx);
+        const valStr = dev && typeof dev.lastHumidity === "number"
+          ? `${formatarNumero(dev.lastHumidity)} %RH`
+          : "-- %RH";
+        return `
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:${estilo.humColor}"></span>${id}</span>
+            <span class="kpi-row-val">${valStr}</span>
+          </div>
+        `;
+      }).join("");
+
+      // Card 3: Nós de Telemetria
+      kpiNodesCount.textContent = `${ativosIds.length} ATIVO${ativosIds.length === 1 ? "" : "S"}`;
+      kpiNodesList.innerHTML = listaComparacao.slice(0, 3).map((id) => {
+        const dev = devicesMap[id];
+        const online = dev && dev.totalReadings > 0;
+        const dotColor = online ? "#10b981" : "#52525b";
+        const count = online ? dev.totalReadings : 0;
+        return `
+          <div class="kpi-row">
+            <span class="kpi-row-label"><span class="series-dot" style="background:${dotColor}"></span>${id}</span>
+            <span class="kpi-row-val">${count} pkts</span>
+          </div>
+        `;
+      }).join("");
+
+      const maxSamples = ativosIds.reduce((acc, id) => Math.max(acc, devicesMap[id]?.totalReadings || 0), 0);
+      kpiBufferUsage.textContent = `${maxSamples} / 15 AMOSTRAS`;
+
+      // Card 4: Divergência entre Sensores
+      let devA = esp32;
+      let devB = esp8266;
+      if ((!devA || !devB) && ativosIds.length >= 2) {
+        devA = devicesMap[ativosIds[0]];
+        devB = devicesMap[ativosIds[1]];
+      }
+
+      if (devA && devB && typeof devA.lastTemperature === "number" && typeof devB.lastTemperature === "number") {
+        const dTemp = Math.abs(devA.lastTemperature - devB.lastTemperature);
+        const dHum = Math.abs((devA.lastHumidity ?? 0) - (devB.lastHumidity ?? 0));
+        kpiDeltaTemp.textContent = `${formatarNumero(dTemp, 1)} °C`;
+        kpiDeltaHum.textContent = `${formatarNumero(dHum, 1)} %RH`;
+      } else {
+        kpiDeltaTemp.textContent = "-- °C";
+        kpiDeltaHum.textContent = "-- %RH";
+      }
+
+      kpiLastSync.textContent = data.lastUpdate || (primaryDev?.lastUpdate ?? "--:--:--");
+    }
+
+    function alinharSerieDireita(serie, tamanhoAlvo) {
+      const arr = Array.isArray(serie) ? serie : [];
+      if (arr.length >= tamanhoAlvo) {
+        return arr.slice(arr.length - tamanhoAlvo);
+      }
+      const preenchimento = new Array(tamanhoAlvo - arr.length).fill(null);
+      return preenchimento.concat(arr);
+    }
+
+    function criarOpcoesGrafico({ yMin, yMax, stepSize, unitSuffix }) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: {
+          mode: "index",
+          intersect: false
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: "index",
-            intersect: false
-          },
-          plugins: {
-            legend: {
-              labels: {
-                color: "#f8fafc",
-                font: { size: 13 }
+        plugins: {
+          legend: {
+            position: "top",
+            align: "end",
+            labels: {
+              color: "#a1a1aa",
+              boxWidth: 12,
+              boxHeight: 2,
+              font: {
+                family: "'JetBrains Mono', monospace",
+                size: 11,
+                weight: "500"
               }
             }
           },
-          scales: {
-            x: {
-              ticks: { color: "#94a3b8" },
-              grid: { color: "rgba(148, 163, 184, 0.1)" }
+          tooltip: {
+            backgroundColor: "#09090b",
+            titleColor: "#f4f4f5",
+            bodyColor: "#e4e4e7",
+            borderColor: "#26272b",
+            borderWidth: 1,
+            padding: 9,
+            titleFont: {
+              family: "'JetBrains Mono', monospace",
+              size: 11
             },
-            y: {
-              ticks: { color: "#94a3b8" },
-              grid: { color: "rgba(148, 163, 184, 0.1)" }
+            bodyFont: {
+              family: "'JetBrains Mono', monospace",
+              size: 11
+            },
+            callbacks: {
+              label: function(context) {
+                const valor = context.parsed.y;
+                if (valor === null || valor === undefined) return null;
+                const formatado = Number(valor).toFixed(1).replace(".", ",");
+                const devId = context.dataset.deviceId || "sensor";
+                return ` ${devId}: ${formatado} ${unitSuffix}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: "#71717a",
+              maxRotation: 0,
+              font: {
+                family: "'JetBrains Mono', monospace",
+                size: 11
+              }
+            },
+            grid: {
+              color: "rgba(38, 39, 43, 0.7)"
+            }
+          },
+          y: {
+            type: "linear",
+            min: yMin,
+            max: yMax,
+            ticks: {
+              stepSize: stepSize,
+              autoSkip: false,
+              color: "#a1a1aa",
+              font: {
+                family: "'JetBrains Mono', monospace",
+                size: 11
+              },
+              callback: (v) => `${Number(v).toFixed(0)} ${unitSuffix}`
+            },
+            grid: {
+              color: "rgba(38, 39, 43, 0.9)"
             }
           }
         }
+      };
+    }
+
+    function renderChartsFromTelemetry(data) {
+      const devicesMap = obterMapaDispositivos(data);
+      const filtro = deviceFilter.value;
+      const todosIds = Object.keys(devicesMap);
+      const idsParaPlotar = filtro === "all"
+        ? todosIds
+        : (devicesMap[filtro] ? [filtro] : []);
+
+      let maxLen = 0;
+      let baseLabels = [];
+
+      idsParaPlotar.forEach((id) => {
+        const dev = devicesMap[id];
+        if (dev && Array.isArray(dev.labels) && dev.labels.length >= maxLen) {
+          maxLen = dev.labels.length;
+          baseLabels = dev.labels;
+        }
       });
+
+      const tempDatasets = [];
+      const humDatasets = [];
+
+      idsParaPlotar.forEach((id, idx) => {
+        const dev = devicesMap[id];
+        if (!dev) return;
+        const estilo = obterEstiloDispositivo(id, idx);
+
+        tempDatasets.push({
+          label: id,
+          deviceId: id,
+          data: alinharSerieDireita(dev.temperature, maxLen),
+          borderColor: estilo.tempColor,
+          backgroundColor: estilo.tempColor,
+          borderDash: estilo.borderDash,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.25,
+          spanGaps: true,
+          fill: false
+        });
+
+        humDatasets.push({
+          label: id,
+          deviceId: id,
+          data: alinharSerieDireita(dev.humidity, maxLen),
+          borderColor: estilo.humColor,
+          backgroundColor: estilo.humColor,
+          borderDash: estilo.borderDash,
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.25,
+          spanGaps: true,
+          fill: false
+        });
+      });
+
+      if (tempChartInstance) {
+        tempChartInstance.data.labels = baseLabels;
+        tempChartInstance.data.datasets = tempDatasets;
+        tempChartInstance.update("none");
+      } else {
+        tempChartInstance = new Chart(tempCtx, {
+          type: "line",
+          data: {
+            labels: baseLabels,
+            datasets: tempDatasets
+          },
+          options: criarOpcoesGrafico({
+            yMin: 15,
+            yMax: 45,
+            stepSize: 5,
+            unitSuffix: "°C"
+          })
+        });
+      }
+
+      if (humChartInstance) {
+        humChartInstance.data.labels = baseLabels;
+        humChartInstance.data.datasets = humDatasets;
+        humChartInstance.update("none");
+      } else {
+        humChartInstance = new Chart(humCtx, {
+          type: "line",
+          data: {
+            labels: baseLabels,
+            datasets: humDatasets
+          },
+          options: criarOpcoesGrafico({
+            yMin: 0,
+            yMax: 100,
+            stepSize: 10,
+            unitSuffix: "%"
+          })
+        });
+      }
     }
 
     async function carregarDados() {
       refreshBtn.disabled = true;
       try {
         const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        const data = await response.json().catch(() => null);
 
-        const data = await response.json();
-
-        if (data.status === "UP") {
+        if (response.ok && data && data.status === "UP") {
+          lastTelemetryData = data;
           statusBadge.className = "badge online";
-          statusText.textContent = `API Online | ${data.database || "PostgreSQL connected"}`;
-          renderChart(
-            data.labels || [],
-            data.temperature || [],
-            data.humidity || []
-          );
+          statusText.textContent = `ONLINE // ${data.database || "PostgreSQL connected"}`;
+          atualizarKPIs(data);
+          renderChartsFromTelemetry(data);
+        } else if (response.status === 503 && data && data.status === "DEGRADED") {
+          lastTelemetryData = data;
+          statusBadge.className = "badge degraded";
+          statusText.textContent = `DEGRADED (503) // ${data.database || "PostgreSQL disconnected"}`;
+          atualizarKPIs(data);
+          renderChartsFromTelemetry(data);
         } else {
-          throw new Error("Status diferente de UP");
+          throw new Error(`HTTP ${response.status}`);
         }
       } catch (error) {
         statusBadge.className = "badge offline";
-        statusText.textContent = "API Offline — Verifique se o Spring Boot está rodando na porta 8080";
+        statusText.textContent = "OFFLINE // PORTA 8080 INACESSÍVEL";
       } finally {
         refreshBtn.disabled = false;
       }
     }
 
+    async function limparMockHistorico() {
+      clearMockBtn.disabled = true;
+      try {
+        const response = await fetch(READINGS_URL, { method: "DELETE" });
+        if (response.ok) {
+          await carregarDados();
+        }
+      } catch (error) {
+        statusBadge.className = "badge offline";
+        statusText.textContent = "ERRO // FALHA AO LIMPAR HISTÓRICO";
+      } finally {
+        clearMockBtn.disabled = false;
+      }
+    }
+
+    function alternarModoAoVivo() {
+      if (liveIntervalId) {
+        clearInterval(liveIntervalId);
+        liveIntervalId = null;
+        liveBtn.classList.remove("active");
+      } else {
+        carregarDados();
+        liveIntervalId = setInterval(carregarDados, 5000);
+        liveBtn.classList.add("active");
+      }
+    }
+
+    deviceFilter.addEventListener("change", () => {
+      if (lastTelemetryData) {
+        atualizarKPIs(lastTelemetryData);
+        renderChartsFromTelemetry(lastTelemetryData);
+      }
+    });
+
+    clearMockBtn.addEventListener("click", limparMockHistorico);
     refreshBtn.addEventListener("click", carregarDados);
+    liveBtn.addEventListener("click", alternarModoAoVivo);
     window.addEventListener("DOMContentLoaded", carregarDados);
   </script>
 </body>
